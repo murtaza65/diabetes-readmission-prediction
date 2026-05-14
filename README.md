@@ -50,7 +50,7 @@ If using the submitted ZIP file, extract the ZIP and open Command Prompt inside 
 
 ```bash
 py -3.11 -m venv venv
-venv\\Scripts\\activate
+venv\Scripts\activate
 ```
 
 ### 3\. Install dependencies
@@ -64,19 +64,19 @@ pip install -r requirements.txt
 Download the dataset from UCI:
 https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008
 
-Place `diabetic\_data.csv` in the project root folder.
+Place `diabetic_data.csv` in the project root folder.
 
 
 
 ### 5\. Train the models
 
 ```bash
-python train\_model.py
+python train_model.py
 ```
 
 This generates a `models.pkl` file with all trained models saved.
 
-Note: models.pkl is generated locally after running train\_model.py and is not included in the repository due to file size limitations.
+Note: models.pkl is generated locally after running train_model.py and is not included in the repository due to file size limitations.
 
 
 
@@ -98,7 +98,7 @@ Open your browser and go to: **http://localhost:5000**
 diabetes-readmission-prediction/
 │
 ├── app.py                  # Flask web application
-├── train\_model.py          # Model training script
+├── train_model.py          # Model training script
 ├── models.pkl              # Saved trained models (generated after training)
 ├── requirements.txt        # Python dependencies
 ├── ML.ipynb                # Jupyter Notebook (exploratory analysis)
