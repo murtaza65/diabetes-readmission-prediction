@@ -78,7 +78,7 @@ python train_model.py
 
 This generates a `models.pkl` file with all trained models saved.
 
-Note: `models.pkl` is generated locally after running train_model.py and is not included in the repository due to file size limitations.
+Note: `models.pkl` is generated locally after running `train_model.py` and is not included in the repository due to file size limitations.
 
 
 
