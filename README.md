@@ -66,6 +66,8 @@ https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999
 
 Place `diabetic_data.csv` in the project root folder.
 
+Note: The dataset file diabetic_data.csv is already included in this GitHub repository, so downloading it separately is not required.
+
 
 
 ### 5\. Train the models
