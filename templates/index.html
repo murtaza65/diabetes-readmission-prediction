@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiabetesRisk — 30-Day Readmission Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface2: #f1f3f7;
+    --border: rgba(0,0,0,0.09);
+    --border-strong: rgba(0,0,0,0.16);
+    --text: #111318;
+    --muted: #6b7280;
+    --muted2: #4b5563;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --blue-border: #B5D4F4;
+    --green: #3B6D11;
+    --green-light: #EAF3DE;
+    --green-border: #C0DD97;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --red-border: #F7C1C1;
+    --amber: #854F0B;
+    --amber-light: #FAEEDA;
+    --amber-border: #EF9F27;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-inner {
+    max-width: 1160px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .logo {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot {
+    width: 7px; height: 7px; background: var(--blue);
+    border-radius: 50%; animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(24,95,165,0.4)}
+    50%{box-shadow:0 0 0 5px rgba(24,95,165,0)}
+  }
+  .nav-chip {
+    font-size: 12px; color: var(--blue); font-weight: 500;
+    background: var(--blue-light); border: 1px solid var(--blue-border);
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+  .page { padding: 32px 0 56px; }
+
+  /* HEADER */
+  .page-header { margin-bottom: 24px; }
+  .header-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--blue); font-weight: 500;
+    background: var(--blue-light); border: 1px solid var(--blue-border);
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
+  }
+  .page-header h1 { font-size: 26px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .page-header p { color: var(--muted2); font-size: 14px; line-height: 1.65; max-width: 560px; }
+
+  /* STAT BAR */
+  .stat-bar {
+    display: flex; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: var(--surface); margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-item {
+    flex: 1; padding: 16px 12px; text-align: center;
+    border-right: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-item:hover { background: var(--blue-light); }
+  .stat-v { font-size: 20px; font-weight: 600; display: block; color: var(--text); }
+  .stat-l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; }
+
+  /* MODEL METRICS */
+  .model-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+  .mm-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .mm-card.best { border-color: var(--blue-border); }
+  .mm-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px; }
+  .mm-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mm-pill {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px;
+  }
+  .mm-pill span { display: block; font-size: 10px; color: var(--muted); }
+  .mm-pill strong { font-size: 14px; font-weight: 600; }
+  .best-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 8px; background: var(--blue-light); color: var(--blue);
+    font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px;
+  }
+
+  /* MAIN GRID */
+  .main-grid {
+    display: grid; grid-template-columns: 1fr 360px;
+    gap: 16px; align-items: start;
+  }
+
+  /* PANEL */
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  }
+  .panel-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface2); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .panel-title { font-size: 15px; font-weight: 600; }
+  .panel-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .panel-body { padding: 20px; }
+
+  /* SECTION LABEL */
+  .sec-label {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; font-weight: 500; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sec-label::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* MODEL TABS */
+  .model-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .mtab {
+    flex: 1; padding: 10px 6px; border: 1px solid var(--border);
+    border-radius: var(--radius); cursor: pointer; font-size: 12px;
+    color: var(--muted2); background: var(--surface2);
+    font-family: 'Inter', sans-serif; text-align: center; transition: all .15s;
+  }
+  .mtab:hover { border-color: var(--border-strong); background: var(--surface); color: var(--text); }
+  .mtab.active { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .mtab i { display: block; font-size: 18px; margin-bottom: 5px; }
+
+  /* FORM */
+  .form-sec { margin-bottom: 20px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: var(--muted2); font-weight: 500; }
+
+  select, input[type=text], input[type=number] {
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 12px; color: var(--text);
+    width: 100%; transition: border-color .15s, box-shadow .15s; appearance: none;
+  }
+  select:focus, input:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.1); background: var(--surface);
+  }
+
+  /* RANGE */
+  .range-row { display: flex; align-items: center; gap: 8px; }
+  .range-row input[type=range] {
+    flex: 1; padding: 0; background: transparent; border: none;
+    box-shadow: none; accent-color: var(--blue);
+  }
+  .range-row input[type=range]:focus { box-shadow: none; }
+  .rv { font-size: 13px; font-weight: 600; min-width: 28px; text-align: right; color: var(--blue); }
+
+  /* SUBMIT */
+  .submit-btn {
+    width: 100%; padding: 12px; background: var(--blue); border: none;
+    border-radius: var(--radius); color: #fff; font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background .15s, transform .1s; margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(24,95,165,0.25);
+  }
+  .submit-btn:hover { background: #0C447C; }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  /* SPINNER */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.35);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .75s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULT PANEL */
+  .result-sticky { position: sticky; top: 72px; }
+
+  .waiting {
+    padding: 48px 24px; text-align: center; color: var(--muted);
+  }
+  .waiting i { font-size: 36px; display: block; margin-bottom: 12px; opacity: .35; }
+  .waiting p { font-size: 13px; line-height: 1.65; }
+
+  .risk-result { display: none; }
+  .risk-header {
+    padding: 24px 20px; text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .risk-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; padding: 6px 16px;
+    border-radius: 20px; border: 1px solid; margin-bottom: 16px;
+  }
+  .risk-chip.high { background: var(--red-light); color: var(--red); border-color: var(--red-border); }
+  .risk-chip.low { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
+  .prob-ring {
+    width: 110px; height: 110px; border-radius: 50%;
+    border: 3px solid var(--border); display: flex;
+    align-items: center; justify-content: center;
+    flex-direction: column; margin: 0 auto 12px;
+    transition: border-color .3s;
+  }
+  .prob-v { font-size: 26px; font-weight: 600; }
+  .prob-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .model-used-lbl { font-size: 12px; color: var(--muted); }
+
+  /* COMPARISON */
+  .comparison { padding: 16px 20px; }
+  .bar-row { margin-bottom: 10px; }
+  .bar-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted2); margin-bottom: 4px; }
+  .bar-lbl strong { font-weight: 600; }
+  .bar-track { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); }
+
+  /* FACTORS */
+  .factors-card { margin-bottom: 12px; }
+  .factor-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 6px; font-size: 12px;
+    transition: background .15s;
+  }
+  .factor-row:hover { background: var(--surface2); }
+  .factor-name { color: var(--muted2); }
+  .imp { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .imp.h { background: var(--red-light); color: var(--red); }
+  .imp.m { background: var(--amber-light); color: var(--amber); }
+  .imp.l { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    border: 1px solid var(--amber-border); background: var(--amber-light);
+    border-radius: var(--radius); padding: 12px 14px;
+    font-size: 12px; color: var(--amber); line-height: 1.65;
+  }
+  .disclaimer strong { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; color: #633806; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); background: var(--surface);
+    padding: 24px 0; text-align: center; color: var(--muted); font-size: 12px;
+  }
+  footer p + p { margin-top: 5px; }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .model-metrics { grid-template-columns: 1fr; }
+    .result-sticky { position: static; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .model-tabs { flex-direction: column; }
+    .stat-bar { flex-wrap: wrap; }
+    .stat-item { flex: 1 1 50%; border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+
+
+<div class="container">
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-tag">
+      <i class="ti ti-building-hospital"></i>
+      Type 2 Diabetes &middot; 30-Day Readmission Prediction
+    </div>
+    <h1>Hospital Readmission Risk Predictor</h1>
+    <p>An ML system trained on 101,766 real patient records from 130 US hospitals. Enter patient data to get an instant risk assessment.</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stat-bar">
+    <div class="stat-item">
+      <span class="stat-v">101,766</span>
+      <div class="stat-l">Patient records</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-v">3</span>
+      <div class="stat-l">ML models</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-v">43</span>
+      <div class="stat-l">Clinical features</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-v">66.7%</span>
+      <div class="stat-l">Best AUC score</div>
+    </div>
+  </div>
+
+  <!-- MODEL METRICS -->
+  <div class="model-metrics">
+    <div class="mm-card">
+      <div class="mm-name">Logistic Regression</div>
+      <div class="mm-pills">
+        <div class="mm-pill"><span>Accuracy</span><strong>71.4%</strong></div>
+        <div class="mm-pill"><span>AUC</span><strong>0.649</strong></div>
+        <div class="mm-pill"><span>F1</span><strong>0.363</strong></div>
+      </div>
+    </div>
+    <div class="mm-card">
+      <div class="mm-name">Random Forest</div>
+      <div class="mm-pills">
+        <div class="mm-pill"><span>Accuracy</span><strong>65.3%</strong></div>
+        <div class="mm-pill"><span>AUC</span><strong>0.651</strong></div>
+        <div class="mm-pill"><span>F1</span><strong>0.423</strong></div>
+      </div>
+    </div>
+    <div class="mm-card best">
+      <div class="mm-name">XGBoost</div>
+      <div class="mm-pills">
+        <div class="mm-pill"><span>Accuracy</span><strong>68.8%</strong></div>
+        <div class="mm-pill"><span>AUC</span><strong>0.667</strong></div>
+        <div class="mm-pill"><span>F1</span><strong>0.428</strong></div>
+      </div>
+      <div class="best-tag"><i class="ti ti-star"></i> Best model</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- FORM PANEL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Patient data entry</div>
+        <div class="panel-sub">Fill in the patient details below to generate a prediction</div>
+      </div>
+      <div class="panel-body">
+
+        <div class="sec-label">Select model</div>
+        <div class="model-tabs">
+          <button class="mtab" onclick="selModel('logistic_regression', this)">
+            <i class="ti ti-chart-line"></i>
+            Logistic<br>regression
+          </button>
+          <button class="mtab" onclick="selModel('random_forest', this)">
+            <i class="ti ti-tree"></i>
+            Random<br>forest
+          </button>
+          <button class="mtab active" onclick="selModel('xgboost', this)">
+            <i class="ti ti-bolt"></i>
+            XGBoost
+            <small style="color:var(--blue);font-size:10px;display:block">Recommended</small>
+          </button>
+        </div>
+
+        <!-- DEMOGRAPHICS -->
+        <div class="form-sec">
+          <div class="sec-label">Demographics</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Age group</label>
+              <select name="age">
+                <option value="[0-10)">[0-10)</option>
+                <option value="[10-20)">[10-20)</option>
+                <option value="[20-30)">[20-30)</option>
+                <option value="[30-40)">[30-40)</option>
+                <option value="[40-50)">[40-50)</option>
+                <option value="[50-60)" selected>[50-60)</option>
+                <option value="[60-70)">[60-70)</option>
+                <option value="[70-80)">[70-80)</option>
+                <option value="[80-90)">[80-90)</option>
+                <option value="[90-100)">[90-100)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Gender</label>
+              <select name="gender">
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Race</label>
+              <select name="race">
+                <option value="Caucasian">Caucasian</option>
+                <option value="AfricanAmerican">African American</option>
+                <option value="Hispanic">Hispanic</option>
+                <option value="Asian">Asian</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Diabetes medication</label>
+              <select name="diabetesMed">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- HOSPITAL INFO -->
+        <div class="form-sec">
+          <div class="sec-label">Hospital information</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Admission type</label>
+              <select name="admission_type_id">
+                <option value="1">Emergency</option>
+                <option value="2">Urgent</option>
+                <option value="3">Elective</option>
+                <option value="4">Newborn</option>
+                <option value="6">Not available</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Discharge disposition</label>
+              <select name="discharge_disposition_id">
+                <option value="1">Discharged to home</option>
+                <option value="2">SNF</option>
+                <option value="3">Skilled nursing facility</option>
+                <option value="6">Home health</option>
+                <option value="11">Expired</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Admission source</label>
+              <select name="admission_source_id">
+                <option value="1">Physician referral</option>
+                <option value="2">Clinic referral</option>
+                <option value="7">Emergency room</option>
+                <option value="4">Transfer hospital</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Days in hospital &mdash; <span id="hospVal" style="color:var(--blue);font-weight:600">3</span></label>
+              <div class="range-row">
+                <input type="range" name="time_in_hospital" min="1" max="14" value="3" step="1"
+                       oninput="document.getElementById('hospVal').textContent=this.value">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLINICAL -->
+        <div class="form-sec">
+          <div class="sec-label">Clinical details</div>
+          <div class="grid3">
+            <div class="field">
+              <label>Lab procedures &mdash; <span id="labVal" style="color:var(--blue);font-weight:600">40</span></label>
+              <div class="range-row">
+                <input type="range" name="num_lab_procedures" min="1" max="130" value="40" step="1"
+                       oninput="document.getElementById('labVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>Procedures &mdash; <span id="procVal" style="color:var(--blue);font-weight:600">1</span></label>
+              <div class="range-row">
+                <input type="range" name="num_procedures" min="0" max="6" value="1" step="1"
+                       oninput="document.getElementById('procVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>Medications &mdash; <span id="medVal" style="color:var(--blue);font-weight:600">15</span></label>
+              <div class="range-row">
+                <input type="range" name="num_medications" min="1" max="81" value="15" step="1"
+                       oninput="document.getElementById('medVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>Outpatient visits &mdash; <span id="outVal" style="color:var(--blue);font-weight:600">0</span></label>
+              <div class="range-row">
+                <input type="range" name="number_outpatient" min="0" max="42" value="0" step="1"
+                       oninput="document.getElementById('outVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>Emergency visits &mdash; <span id="emgVal" style="color:var(--blue);font-weight:600">0</span></label>
+              <div class="range-row">
+                <input type="range" name="number_emergency" min="0" max="76" value="0" step="1"
+                       oninput="document.getElementById('emgVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>Inpatient visits &mdash; <span id="inpVal" style="color:var(--blue);font-weight:600">0</span></label>
+              <div class="range-row">
+                <input type="range" name="number_inpatient" min="0" max="21" value="0" step="1"
+                       oninput="document.getElementById('inpVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>No. of diagnoses &mdash; <span id="diagVal" style="color:var(--blue);font-weight:600">7</span></label>
+              <div class="range-row">
+                <input type="range" name="number_diagnoses" min="1" max="16" value="7" step="1"
+                       oninput="document.getElementById('diagVal').textContent=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label>Max glucose serum</label>
+              <select name="max_glu_serum">
+                <option value="None">None</option>
+                <option value=">200">&gt;200</option>
+                <option value=">300">&gt;300</option>
+                <option value="Norm">Normal</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>A1C result</label>
+              <select name="A1Cresult">
+                <option value="None">None</option>
+                <option value=">7">&gt;7</option>
+                <option value=">8">&gt;8</option>
+                <option value="Norm">Normal</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEDICATIONS -->
+        <div class="form-sec">
+          <div class="sec-label">Key medications</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Insulin</label>
+              <select name="insulin">
+                <option value="No">No</option>
+                <option value="Steady">Steady</option>
+                <option value="Up">Up</option>
+                <option value="Down">Down</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Metformin</label>
+              <select name="metformin">
+                <option value="No">No</option>
+                <option value="Steady">Steady</option>
+                <option value="Up">Up</option>
+                <option value="Down">Down</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Glipizide</label>
+              <select name="glipizide">
+                <option value="No">No</option>
+                <option value="Steady">Steady</option>
+                <option value="Up">Up</option>
+                <option value="Down">Down</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Medication change</label>
+              <select name="change">
+                <option value="No">No change</option>
+                <option value="Ch">Changed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIDDEN DEFAULTS -->
+        <input type="hidden" name="diag_1" value="250">
+        <input type="hidden" name="diag_2" value="250">
+        <input type="hidden" name="diag_3" value="250">
+        <input type="hidden" name="repaglinide" value="No">
+        <input type="hidden" name="nateglinide" value="No">
+        <input type="hidden" name="chlorpropamide" value="No">
+        <input type="hidden" name="glimepiride" value="No">
+        <input type="hidden" name="acetohexamide" value="No">
+        <input type="hidden" name="glyburide" value="No">
+        <input type="hidden" name="tolbutamide" value="No">
+        <input type="hidden" name="pioglitazone" value="No">
+        <input type="hidden" name="rosiglitazone" value="No">
+        <input type="hidden" name="acarbose" value="No">
+        <input type="hidden" name="miglitol" value="No">
+        <input type="hidden" name="troglitazone" value="No">
+        <input type="hidden" name="tolazamide" value="No">
+        <input type="hidden" name="glyburide-metformin" value="No">
+        <input type="hidden" name="glipizide-metformin" value="No">
+        <input type="hidden" name="glimepiride-pioglitazone" value="No">
+        <input type="hidden" name="metformin-rosiglitazone" value="No">
+        <input type="hidden" name="metformin-pioglitazone" value="No">
+
+        <button class="submit-btn" id="predBtn" onclick="runPrediction()">
+          <i class="ti ti-search" id="btnIcon"></i>
+          <span id="btnTxt">Predict readmission risk</span>
+          <div class="spinner" id="btnSpin"></div>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="result-sticky">
+
+      <div class="panel" style="margin-bottom: 12px; overflow: hidden;">
+
+        <div class="waiting" id="waitState">
+          <i class="ti ti-stethoscope"></i>
+          <p>Fill in patient details on the left and click <strong>Predict</strong> to get a readmission risk assessment.</p>
+        </div>
+
+        <div class="risk-result" id="resState">
+          <div class="risk-header">
+            <div id="riskBadge" class="risk-chip">—</div>
+            <div class="prob-ring" id="probRing">
+              <div class="prob-v" id="probVal">—</div>
+              <div class="prob-l">Risk probability</div>
+            </div>
+            <div class="model-used-lbl" id="modelUsedLbl"></div>
+          </div>
+          <div class="comparison">
+            <div class="sec-label">All model predictions</div>
+            <div id="modelBars"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- KEY FACTORS -->
+      <div class="panel factors-card" style="padding: 16px;">
+        <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+          <i class="ti ti-pin"></i> Key risk factors (SHAP analysis)
+        </div>
+        <div class="factor-row"><span class="factor-name">No. of inpatient visits</span><span class="imp h">High impact</span></div>
+        <div class="factor-row"><span class="factor-name">Time in hospital</span><span class="imp h">High impact</span></div>
+        <div class="factor-row"><span class="factor-name">Primary diagnosis (diag_1)</span><span class="imp h">High impact</span></div>
+        <div class="factor-row"><span class="factor-name">No. of lab procedures</span><span class="imp m">Medium impact</span></div>
+        <div class="factor-row"><span class="factor-name">No. of medications</span><span class="imp m">Medium impact</span></div>
+        <div class="factor-row"><span class="factor-name">Discharge disposition</span><span class="imp m">Medium impact</span></div>
+        <div class="factor-row"><span class="factor-name">Age group</span><span class="imp l">Lower impact</span></div>
+      </div>
+
+      <!-- DISCLAIMER -->
+      <div class="disclaimer" style="margin-top: 12px;">
+        <strong><i class="ti ti-alert-triangle"></i> Clinical disclaimer</strong>
+        This tool is for research and educational purposes only. It does not replace clinical judgment. Any real-world use requires ethical approval and clinical validation.
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+
+
+<script>
+  let selectedModel = 'xgboost';
+
+  function selModel(model, btn) {
+    selectedModel = model;
+    document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function getFormData() {
+    const data = { model: selectedModel };
+    document.querySelectorAll('[name]').forEach(el => {
+      if (el.name) data[el.name] = el.value;
+    });
+    return data;
+  }
+
+  async function runPrediction() {
+    const btn = document.getElementById('predBtn');
+    const txt = document.getElementById('btnTxt');
+    const spin = document.getElementById('btnSpin');
+    const icon = document.getElementById('btnIcon');
+
+    btn.disabled = true;
+    icon.style.display = 'none';
+    spin.style.display = 'block';
+    txt.textContent = 'Analyzing...';
+
+    try {
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getFormData())
+      });
+      const result = await response.json();
+      if (result.success) showResult(result);
+      else alert('Error: ' + result.error);
+    } catch (e) {
+      alert('Connection error. Make sure the Flask server is running.');
+    } finally {
+      btn.disabled = false;
+      icon.style.display = '';
+      spin.style.display = 'none';
+      txt.textContent = 'Predict readmission risk';
+    }
+  }
+
+  function showResult(result) {
+    document.getElementById('waitState').style.display = 'none';
+    const resState = document.getElementById('resState');
+    resState.style.display = 'block';
+
+    const isHigh = result.prediction === 1;
+    const badge = document.getElementById('riskBadge');
+    badge.textContent = result.risk_level;
+    badge.className = 'risk-chip ' + (isHigh ? 'high' : 'low');
+
+    const pv = document.getElementById('probVal');
+    pv.textContent = result.probability + '%';
+    pv.style.color = isHigh ? '#A32D2D' : '#3B6D11';
+
+    const ring = document.getElementById('probRing');
+    ring.style.borderColor = isHigh ? '#E24B4A' : '#639922';
+
+    document.getElementById('modelUsedLbl').textContent = 'Using: ' + result.model_used;
+
+    const barsContainer = document.getElementById('modelBars');
+    barsContainer.innerHTML = '';
+
+    const colors = {
+      'Logistic Regression': '#6b7280',
+      'Random Forest': '#3B6D11',
+      'XGBoost': '#185FA5'
+    };
+
+    Object.entries(result.all_probs).forEach(([model, prob]) => {
+      const bar = document.createElement('div');
+      bar.className = 'bar-row';
+      bar.innerHTML = `
+        <div class="bar-lbl">
+          <span>${model}</span>
+          <strong style="color:${colors[model] || '#6b7280'}">${prob}%</strong>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%;background:${colors[model] || '#6b7280'}" data-w="${prob}"></div>
+        </div>`;
+      barsContainer.appendChild(bar);
+    });
+
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(f => f.style.width = f.dataset.w + '%');
+    }, 80);
+  }
+</script>
+</body>
+</html>
