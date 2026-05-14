@@ -66,7 +66,7 @@ https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999
 
 Place `diabetic_data.csv` in the project root folder.
 
-Note: The dataset file diabetic_data.csv is already included in this GitHub repository, so downloading it separately is not required.
+Note: The dataset file `diabetic_data.csv` is already included in this GitHub repository, so downloading it separately is not required.
 
 
 
@@ -78,7 +78,7 @@ python train_model.py
 
 This generates a `models.pkl` file with all trained models saved.
 
-Note: models.pkl is generated locally after running train_model.py and is not included in the repository due to file size limitations.
+Note: `models.pkl` is generated locally after running train_model.py and is not included in the repository due to file size limitations.
 
 
 
